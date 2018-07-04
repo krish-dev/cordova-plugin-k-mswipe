@@ -1,0 +1,31 @@
+{
+  "name": "cordova-plugin-k-mswipe",
+  "version": "0.0.1",
+  "description": "Cordova Mswipe Plugin",
+  "peerDependencies": {
+    "rxjs": "5.5.11"
+  },
+  "cordova": {
+    "id": "cordova-plugin-k-mswipe",
+    "platforms": [
+      "android"
+    ]
+  },
+  "keywords": [
+    "cordova",
+    "mswipe",
+    "payment",
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krish-dev/cordova-plugin-k-mswipe.git"
+  },
+  "bugs": {
+    "url": "https://github.com/krish-dev/cordova-plugin-k-mswipe/issues"
+  },
+  "typings": "index.d.ts",
+  "author": "Krishnendu Sekhar Das",
+  "license": "Apache 2.0"
+}
