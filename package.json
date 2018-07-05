@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-k-mswipe",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Cordova Mswipe Plugin",
   "peerDependencies": {
     "rxjs": "5.5.11"
@@ -25,6 +25,7 @@
   "bugs": {
     "url": "https://github.com/krish-dev/cordova-plugin-k-mswipe/issues"
   },
+  "main": "bundles/main.js",
   "typings": "index.d.ts",
   "author": "Krishnendu Sekhar Das",
   "license": "Apache 2.0"
