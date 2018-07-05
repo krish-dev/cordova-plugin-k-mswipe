@@ -1,5 +1,16 @@
 "use strict";
 exports.__esModule = true;
+var GatewayEnvironment;
+(function (GatewayEnvironment) {
+    GatewayEnvironment["LABS"] = "LABS";
+    GatewayEnvironment["PRODUCTION"] = "PRODUCTION";
+})(GatewayEnvironment = exports.GatewayEnvironment || (exports.GatewayEnvironment = {}));
+var NetworkSource;
+(function (NetworkSource) {
+    NetworkSource["WIFI"] = "WIFI";
+    NetworkSource["EHTERNET"] = "EHTERNET";
+    NetworkSource["SIM"] = "SIM";
+})(NetworkSource = exports.NetworkSource || (exports.NetworkSource = {}));
 var ResponseCallbackType;
 (function (ResponseCallbackType) {
     ResponseCallbackType["RES_TYPE_GATEWAY"] = "GATEWAY_CONNECTION";
@@ -11,6 +22,8 @@ var ResponseCallbackType;
     ResponseCallbackType["RES_TYPE_PAYMENT_APPROVED"] = "PAYMENT_APPROVED";
     ResponseCallbackType["RES_TYPE_PAYMENT_DISPLAY_TEXT"] = "PAYMENT_DISPLAY_TEXT";
     ResponseCallbackType["RES_TYPE_DEVICE_DISCONNECT"] = "DEVICE_DISCONNECT ";
+    ResponseCallbackType["RES_TYPE_NO_CONFIG"] = "NO_CONFIG";
+    ResponseCallbackType["RES_TYPE_EXISTING_SESSION_FOUND"] = "EXISTING_SESSION_FOUND";
 })(ResponseCallbackType = exports.ResponseCallbackType || (exports.ResponseCallbackType = {}));
 var WisePadConnection;
 (function (WisePadConnection) {

@@ -1,6 +1,7 @@
 export {
 	Mswipe,
-	MarchentLogin,
+	MswipeConfig,
+	MarchentCredential,
 	PaymentInfo,
 	TransactionInfo
 } from './interfaces';

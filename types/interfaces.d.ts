@@ -1,4 +1,16 @@
+import { GatewayEnvironment, NetworkSource } from "./enums";
+
 export interface Mswipe {
+    config(
+        configuartion: MswipeConfig,
+        callbackSuccess: (res: any) => void,
+        callbackError: (err: any) => void): void;
+
+    verifyMarchent(
+        credential: MarchentCredential,
+        callbackSuccess: (res: any) => void,
+        callbackError: (err: any) => void): void;
+
     pay(
         paymentInfo: PaymentInfo,
         callbackSuccess: (res: any) => void,
@@ -8,13 +20,14 @@ export interface Mswipe {
         callbackSuccess: (res: any) => void,
         callbackError: (err: any) => void): void;
 
-    verifyMarchent(
-        credential: MarchentLogin,
-        callbackSuccess: (res: any) => void,
-        callbackError: (err: any) => void): void;
 }
 
-export interface MarchentLogin {
+export interface MswipeConfig {
+    environment: GatewayEnvironment;
+    network: NetworkSource
+}
+
+export interface MarchentCredential {
     userId: string;
     pin: string;
 }

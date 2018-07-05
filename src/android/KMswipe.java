@@ -34,8 +34,9 @@ import java.util.Hashtable;
 
 
 /**
-* This class echoes a string called from JavaScript.
-*/
+ * KMswipe android
+ * Created by Krishnendu Sekhar Das
+ */
 public class KMswipe extends CordovaPlugin {
 
     private MSWisepadController msWisepadController = null;
@@ -53,6 +54,7 @@ public class KMswipe extends CordovaPlugin {
     private LoginResponseData marchentData = null;
     private JSONObject paymentInfo = null;
 
+    /** All plugins response type */
     private String RES_TYPE_GATEWAY = "GATEWAY_CONNECTION";
     private String RES_TYPE_MARCHENT_AUTHENTICATED = "MARCHENT_AUTHENTICATED";
     private String RES_TYPE_PAYMENT_WISEPAD_CONNECTION = "PAYMENT_WISEPAD_CONNECTION";
@@ -61,8 +63,9 @@ public class KMswipe extends CordovaPlugin {
     private String RES_TYPE_PAYMENT_ERROR = "PAYMENT_ERROR";
     private String RES_TYPE_PAYMENT_APPROVED = "PAYMENT_APPROVED";
     private String RES_TYPE_PAYMENT_DISPLAY_TEXT = "PAYMENT_DISPLAY_TEXT";
-    private String RES_TYPE_DEVICE_DISCONNECT = "DEVICE_DISCONNECT ";
-
+    private String RES_TYPE_DEVICE_DISCONNECT = "DEVICE_DISCONNECTED";
+    private String RES_TYPE_NO_CONFIG = "NO_CONFIG";
+    private String RES_TYPE_EXISTING_SESSION_FOUND = "EXISTING_SESSION_FOUND";
 
     private ServiceConnection msWisepadDeviceControllerService = new ServiceConnection() {
         @Override
@@ -101,6 +104,8 @@ public class KMswipe extends CordovaPlugin {
                     disconnect();
                 }else if(wisePadConnection ==  WisePadConnection.WisePadConnection_BLUETOOTH_SWITCHEDOFF) {
                     disconnect();
+                }else if(wisePadConnection == WisePadConnection.WisePadConnection_DIS_CONNECTED) {
+//                    rootCallbackContext = null;
                 }
             }
 
@@ -229,6 +234,10 @@ public class KMswipe extends CordovaPlugin {
             }
         };
 
+        /**
+         * MSwipe controller response listener.
+         * It returns payment state and response.
+         * */
         msWisepadControllerResponseListener = new MSWisepadControllerResponseListener() {
             @Override
             public void onReponseData(MSDataStore msDataStore) {
@@ -300,7 +309,7 @@ public class KMswipe extends CordovaPlugin {
                             resObj.put("transactionInfo", trxData);
 
                             rootCallbackContext.success(resObj);
-
+                            disconnect();
                         }catch (JSONException e) {
                             Log.v("K_ERROR", e.toString());
                         }
@@ -312,9 +321,6 @@ public class KMswipe extends CordovaPlugin {
                 }
             }
         };
-
-        msWisepadController = MSWisepadController.getSharedMSWisepadController(context, MSWisepadController.GATEWAY_ENVIRONMENT.LABS, MSWisepadController.NETWORK_SOURCE.WIFI, msGatewayConnectionListener);
-
     }
 
     void sendGatewayCallback(String msg) {
@@ -329,7 +335,6 @@ public class KMswipe extends CordovaPlugin {
             PluginResult result = new PluginResult(PluginResult.Status.ERROR, e.toString());
             result.setKeepCallback(true);
             rootCallbackContext.sendPluginResult(result);
-            rootCallbackContext = null;
         }
     }
 
@@ -386,96 +391,135 @@ public class KMswipe extends CordovaPlugin {
             PluginResult result = new PluginResult(PluginResult.Status.ERROR, e.toString());
             result.setKeepCallback(true);
             rootCallbackContext.sendPluginResult(result);
-            rootCallbackContext = null;
         }
     }
-
-
 
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-
         rootCallbackContext = callbackContext;
-        JSONObject msgObject = args.getJSONObject(0);
 
-        if (action.equals("pay")) {
-            this.pay(msgObject, callbackContext);
+        if(action.equals("config")) {
+            this.configMswipe(args.getJSONObject(0), callbackContext);
             return true;
-        } else if(action.equals("verifyMarchent")) {
-            this.verifyMarchent(msgObject, callbackContext);
+        }else if(action.equals("verifyMarchent")) {
+            this.verifyMarchent(args.getJSONObject(0), callbackContext);
+            return true;
+        } else if (action.equals("pay")) {
+            this.pay(args.getJSONObject(0), callbackContext);
             return true;
         } else if(action.equals("disconnect")) {
-            this.disconnect(RES_TYPE_DEVICE_DISCONNECT,callbackContext);
+            this.disconnect(RES_TYPE_DEVICE_DISCONNECT, callbackContext);
             return true;
         }
-
         return false;
     }
 
-    private void verifyMarchent(JSONObject msgObject, CallbackContext callbackContext) {
+    private void configMswipe(JSONObject configObject, CallbackContext callbackContext) {
+        MSWisepadController.GATEWAY_ENVIRONMENT gatewayEnvironment;
+        MSWisepadController.NETWORK_SOURCE networkSource;
+
         try {
-            msWisepadController.authenticateMerchant(msgObject.getString("userId"),msgObject.getString("pin"), msWisepadControllerResponseListener);
-        }catch (JSONException e) {
+            String environment = configObject.getString("environment");
+            String network = configObject.getString("network");
+
+            /** Environment configuration */
+            if(environment.equals(MSWisepadController.GATEWAY_ENVIRONMENT.LABS.toString())) {
+                gatewayEnvironment = MSWisepadController.GATEWAY_ENVIRONMENT.LABS;
+            }else if(environment.equals(MSWisepadController.GATEWAY_ENVIRONMENT.PRODUCTION.toString())) {
+                gatewayEnvironment = MSWisepadController.GATEWAY_ENVIRONMENT.PRODUCTION;
+            }else {
+                gatewayEnvironment = MSWisepadController.GATEWAY_ENVIRONMENT.PRODUCTION;
+            }
+
+            /** Network configuration */
+            if(network.equals(MSWisepadController.NETWORK_SOURCE.EHTERNET.toString())) {
+                networkSource = MSWisepadController.NETWORK_SOURCE.EHTERNET;
+            }else if(network.equals(MSWisepadController.NETWORK_SOURCE.WIFI.toString())) {
+                networkSource = MSWisepadController.NETWORK_SOURCE.WIFI;
+            }else if(network.equals(MSWisepadController.NETWORK_SOURCE.SIM.toString())) {
+                networkSource = MSWisepadController.NETWORK_SOURCE.SIM;
+            }else {
+                networkSource = MSWisepadController.NETWORK_SOURCE.SIM;
+            }
+
+            Log.v("KKKKK", gatewayEnvironment.toString());
+            Log.v("KKKKK", networkSource.toString());
+
+            msWisepadController = MSWisepadController.getSharedMSWisepadController(context, gatewayEnvironment, networkSource, msGatewayConnectionListener);
+            callbackContext.success("OK");
+            rootCallbackContext = null;
+        } catch (JSONException e) {
             callbackContext.error(e.toString());
+            rootCallbackContext = null;
+        }
+    }
+
+    private void verifyMarchent(JSONObject configObject, CallbackContext callbackContext) {
+        try {
+            if(msWisepadController != null) {
+                msWisepadController.authenticateMerchant(configObject.getString("userId"), configObject.getString("pin"), msWisepadControllerResponseListener);
+            }else {
+                try{
+                    JSONObject resObj = new JSONObject();
+                    resObj.put("type", RES_TYPE_NO_CONFIG);
+                    resObj.put("message", "Environment configuration required. invoke config() first.");
+                    callbackContext.success(resObj);
+                }catch (JSONException e) {
+                    callbackContext.error(e.toString());
+                }
+            }
+        } catch (JSONException e) {
+           callbackContext.error(e.toString());
         }
     }
 
     private void pay(JSONObject msgObject, CallbackContext callbackContext) throws JSONException {
         paymentInfo = new JSONObject();
-
-        try {
-            paymentInfo.put("amount", msgObject.getString("amount"));
-            paymentInfo.put("mobileNumber", msgObject.getString("mobileNumber"));
-            paymentInfo.put("invoiceNumber", msgObject.getString("invoiceNumber"));
-            paymentInfo.put("email", msgObject.getString("email"));
-            paymentInfo.put("notes", msgObject.getString("notes"));
-            paymentInfo.put("extraNote1", msgObject.getString("extraNote1"));
-            paymentInfo.put("extraNote2", msgObject.getString("extraNote2"));
-            paymentInfo.put("extraNote3", msgObject.getString("extraNote3"));
-            paymentInfo.put("extraNote4", msgObject.getString("extraNote4"));
-            paymentInfo.put("extraNote5", msgObject.getString("extraNote5"));
-            paymentInfo.put("extraNote6", msgObject.getString("extraNote6"));
-            paymentInfo.put("extraNote7", msgObject.getString("extraNote7"));
-            paymentInfo.put("extraNote8", msgObject.getString("extraNote8"));
-            paymentInfo.put("extraNote9", msgObject.getString("extraNote9"));
-            paymentInfo.put("extraNote10", msgObject.getString("extraNote10"));
-
-            context.bindService(new Intent(context, MSWisepadDeviceController.class), msWisepadDeviceControllerService, Context.BIND_AUTO_CREATE);
-
-        }catch (JSONException e) {
+        if(IsMSWisepasConnectionServiceBound) {
+            try{
+                JSONObject resObj = new JSONObject();
+                resObj.put("type", RES_TYPE_EXISTING_SESSION_FOUND);
+                resObj.put("message", "Another payment is in process, to force terminate existing process invoke disconnect().");
+                callbackContext.success(resObj);
+            }catch (JSONException e) {
                 callbackContext.error(e.toString());
+            }
+        }else {
+            try {
+                paymentInfo.put("amount", msgObject.getString("amount"));
+                paymentInfo.put("mobileNumber", msgObject.getString("mobileNumber"));
+                paymentInfo.put("invoiceNumber", msgObject.getString("invoiceNumber"));
+                paymentInfo.put("email", msgObject.getString("email"));
+                paymentInfo.put("notes", msgObject.getString("notes"));
+                paymentInfo.put("extraNote1", msgObject.getString("extraNote1"));
+                paymentInfo.put("extraNote2", msgObject.getString("extraNote2"));
+                paymentInfo.put("extraNote3", msgObject.getString("extraNote3"));
+                paymentInfo.put("extraNote4", msgObject.getString("extraNote4"));
+                paymentInfo.put("extraNote5", msgObject.getString("extraNote5"));
+                paymentInfo.put("extraNote6", msgObject.getString("extraNote6"));
+                paymentInfo.put("extraNote7", msgObject.getString("extraNote7"));
+                paymentInfo.put("extraNote8", msgObject.getString("extraNote8"));
+                paymentInfo.put("extraNote9", msgObject.getString("extraNote9"));
+                paymentInfo.put("extraNote10", msgObject.getString("extraNote10"));
+
+                context.bindService(new Intent(context, MSWisepadDeviceController.class), msWisepadDeviceControllerService, Context.BIND_AUTO_CREATE);
+            }catch (JSONException e) {
+                callbackContext.error(e.toString());
+            }
         }
     }
 
     private void disconnect(String type, CallbackContext callbackContext) {
         try {
-            if(msWisepadDeviceController != null) {
-                msWisepadDeviceController.disconnect();
-                context.unbindService(msWisepadDeviceControllerService);
-                msWisepadDeviceController = null;
-                try{
-                    JSONObject resObj = new JSONObject();
-                    resObj.put("type", type);
-                    resObj.put("message", "");
-                    callbackContext.success(resObj);
-                    rootCallbackContext = null;
-                }catch (JSONException e) {
-                    callbackContext.error(e.toString());
-                    rootCallbackContext = null;
-                }
-            }else {
-                msWisepadDeviceController = null;
-                try{
-                    JSONObject resObj = new JSONObject();
-                    resObj.put("type", type);
-                    resObj.put("message", "");
-                    callbackContext.success(resObj);
-                    rootCallbackContext = null;
-                }catch (JSONException e) {
-                    callbackContext.error(e.toString());
-                    rootCallbackContext = null;
-                }
+            disconnect();
+            try{
+                JSONObject resObj = new JSONObject();
+                resObj.put("type", type);
+                resObj.put("message", "OK");
+                callbackContext.success(resObj);
+            }catch (JSONException e) {
+                callbackContext.error(e.toString());
             }
         }catch (Exception e) {
             callbackContext.error(e.toString());

@@ -1,9 +1,17 @@
 var exec = require('cordova/exec');
-
+/**
+ * @name KMswipe
+ * @description This plugin is responsible to communicate with MSwipe Wisepad device
+ * @author Krishnendu Sekhar Das
+ */
 function KMswipe() { }
 
-KMswipe.prototype.verifyMarchent = function (loginData, successCallback, errorCallback) {
-    exec(successCallback, errorCallback, 'KMswipe', 'verifyMarchent', [loginData]);
+KMswipe.prototype.config = function (configuartion, successCallback, errorCallback) {
+    exec(successCallback, errorCallback, 'KMswipe', 'config', [configuartion]);
+};
+
+KMswipe.prototype.verifyMarchent = function (credential, successCallback, errorCallback) {
+    exec(successCallback, errorCallback, 'KMswipe', 'verifyMarchent', [credential]);
 };
 
 KMswipe.prototype.pay = function (paymentData, successCallback, errorCallback) {
