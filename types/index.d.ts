@@ -15,5 +15,7 @@ export {
 	DisplayText,
 	TransactionResult,
 	CardSchemerResult,
-	TransactionType
+	TransactionType,
+	GatewayEnvironment,
+	NetworkSource
 } from './enums';

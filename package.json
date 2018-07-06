@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-k-mswipe",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Cordova Mswipe Plugin",
   "peerDependencies": {
     "rxjs": "5.5.11"
