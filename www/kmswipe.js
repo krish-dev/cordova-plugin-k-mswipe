@@ -35,6 +35,10 @@ KMswipe.prototype.pay = function (paymentData, successCallback, errorCallback) {
     exec(successCallback, errorCallback, 'KMswipe', 'pay', [paymentInfo]);
 };
 
+KMswipe.prototype.voidTransaction = function (data, successCallback, errorCallback) {
+    exec(successCallback, errorCallback, 'KMswipe', 'voidTransaction', [data]);
+};
+
 KMswipe.prototype.disconnect = function (successCallback, errorCallback) {
     exec(successCallback, errorCallback, 'KMswipe', 'disconnect', []);
 };

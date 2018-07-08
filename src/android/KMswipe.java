@@ -24,6 +24,7 @@ import com.mswipetech.wisepad.sdk.data.CardData;
 import com.mswipetech.wisepad.sdk.data.CardSaleResponseData;
 import com.mswipetech.wisepad.sdk.data.LoginResponseData;
 import com.mswipetech.wisepad.sdk.data.MSDataStore;
+import com.mswipetech.wisepad.sdk.data.VoidTransactionResponseData;
 import com.mswipetech.wisepad.sdk.device.MSWisepadDeviceController;
 import com.mswipetech.wisepad.sdk.device.MSWisepadDeviceControllerResponseListener;
 import com.mswipetech.wisepad.sdk.device.WisePadConnection;
@@ -66,6 +67,8 @@ public class KMswipe extends CordovaPlugin {
     private String RES_TYPE_DEVICE_DISCONNECT = "DEVICE_DISCONNECTED";
     private String RES_TYPE_NO_CONFIG = "NO_CONFIG";
     private String RES_TYPE_EXISTING_SESSION_FOUND = "EXISTING_SESSION_FOUND";
+    private String RES_TYPE_PAYMENT_VOID_APPROVED = "PAYMENT_VOID_APPROVED";
+    private String RES_TYPE_PAYMENT_VOID_ERROR = "PAYMENT_VOID_ERROR";
 
     private ServiceConnection msWisepadDeviceControllerService = new ServiceConnection() {
         @Override
@@ -244,9 +247,32 @@ public class KMswipe extends CordovaPlugin {
 
                 if(!msDataStore.getResponseStatus()) {
                     Log.v("K_FAILED",msDataStore.getResponseFailureReason());
+                    rootCallbackContext.error(msDataStore.getResponseFailureReason());
                 }
 
-                if(msDataStore instanceof LoginResponseData) {
+                if(msDataStore instanceof VoidTransactionResponseData) {
+                    VoidTransactionResponseData voidTransactionResponseData = (VoidTransactionResponseData) msDataStore;
+                    if(voidTransactionResponseData.getResponseStatus()) {
+                        try {
+                            JSONObject resObj = new JSONObject();
+                            JSONObject trxData = new JSONObject()
+                                    .put("info",voidTransactionResponseData.getReceiptData().toString());
+
+                            resObj.put("type", RES_TYPE_PAYMENT_APPROVED);
+                            resObj.put("message", voidTransactionResponseData.getResponseSuccessMessage());
+                            resObj.put("transactionInfo", trxData);
+
+                            rootCallbackContext.success(resObj);
+                            disconnect();
+                        }catch (JSONException e) {
+                            Log.v("K_ERROR", e.toString());
+                        }
+                    }else {
+                        rootCallbackContext.error(voidTransactionResponseData.getResponseFailureReason());
+                    }
+
+
+                } else if(msDataStore instanceof LoginResponseData) {
                     LoginResponseData loginResponseData = (LoginResponseData) msDataStore;
                     marchentData = loginResponseData;
                     sendAuthCallback(loginResponseData);
@@ -408,6 +434,9 @@ public class KMswipe extends CordovaPlugin {
         } else if (action.equals("pay")) {
             this.pay(args.getJSONObject(0), callbackContext);
             return true;
+        } else if (action.equals("voidTransaction")) {
+            this.voidTransaction(args.getJSONObject(0), callbackContext);
+            return true;
         } else if(action.equals("disconnect")) {
             this.disconnect(RES_TYPE_DEVICE_DISCONNECT, callbackContext);
             return true;
@@ -507,6 +536,28 @@ public class KMswipe extends CordovaPlugin {
             }catch (JSONException e) {
                 callbackContext.error(e.toString());
             }
+        }
+    }
+
+    private void  voidTransaction(JSONObject msgObject, CallbackContext callbackContext) throws JSONException  {
+        if(msWisepadController != null) {
+            try {
+                msWisepadController.processVoidTransaction(
+                        msgObject.getString("merchantId"),
+                        marchentData.getSessionTokeniser(),
+                        msgObject.getString("date"),
+                        msgObject.getString("amount"),
+                        msgObject.getString("cardLast4Digits"),
+                        msgObject.getString("stanId"),
+                        msgObject.getString("voucherNo"),
+                        msgObject.getString("clientId"),
+                        msWisepadControllerResponseListener);
+            }catch (JSONException e) {
+                callbackContext.error(e.toString());
+            }
+
+        }else {
+            callbackContext.error("Merchant information not available");
         }
     }
 

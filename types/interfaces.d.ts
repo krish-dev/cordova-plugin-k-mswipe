@@ -16,6 +16,11 @@ export interface Mswipe {
         callbackSuccess: (res: any) => void,
         callbackError: (err: any) => void): void;
 
+    voidTransaction(
+        voidTransactionInfo: VoidTransactionInfo,
+        callbackSuccess: (res: any) => void,
+        callbackError: (err: any) => void): void;
+
     disconnect(
         callbackSuccess: (res: any) => void,
         callbackError: (err: any) => void): void;
@@ -48,6 +53,21 @@ export interface PaymentInfo {
     extraNote8?: string;
     extraNote9?: string;
     extraNote10?: string;
+}
+
+/**
+ * @property date: Date format should be like YYYY-MM-DD (2018-12-29)
+ * @export
+ * @interface VoidTransactionInfo
+ */
+export interface VoidTransactionInfo {
+    merchantId: string;
+    amount: string;
+    date: string;
+    cardLast4Digits: string;
+    stanId: string;
+    voucherNo: string;
+    clientId: string;
 }
 
 export interface TransactionInfo {
