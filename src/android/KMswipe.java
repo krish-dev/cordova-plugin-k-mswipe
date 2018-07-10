@@ -24,6 +24,7 @@ import com.mswipetech.wisepad.sdk.data.CardData;
 import com.mswipetech.wisepad.sdk.data.CardSaleResponseData;
 import com.mswipetech.wisepad.sdk.data.LoginResponseData;
 import com.mswipetech.wisepad.sdk.data.MSDataStore;
+import com.mswipetech.wisepad.sdk.data.TransactionDetailsResponseData;
 import com.mswipetech.wisepad.sdk.data.VoidTransactionResponseData;
 import com.mswipetech.wisepad.sdk.device.MSWisepadDeviceController;
 import com.mswipetech.wisepad.sdk.device.MSWisepadDeviceControllerResponseListener;
@@ -54,6 +55,9 @@ public class KMswipe extends CordovaPlugin {
     private CardData cardInfo = null;
     private LoginResponseData marchentData = null;
     private JSONObject paymentInfo = null;
+    private String voidTrxDate = null;
+
+
 
     /** All plugins response type */
     private String RES_TYPE_GATEWAY = "GATEWAY_CONNECTION";
@@ -89,6 +93,7 @@ public class KMswipe extends CordovaPlugin {
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
+            Log.v("onServiceDisconnected", "DISCONNECTED");
             msWisepadDeviceController = null;
             IsMSWisepasConnectionServiceBound = false;
         }
@@ -108,7 +113,7 @@ public class KMswipe extends CordovaPlugin {
                 }else if(wisePadConnection ==  WisePadConnection.WisePadConnection_BLUETOOTH_SWITCHEDOFF) {
                     disconnect();
                 }else if(wisePadConnection == WisePadConnection.WisePadConnection_DIS_CONNECTED) {
-//                    rootCallbackContext = null;
+
                 }
             }
 
@@ -165,7 +170,7 @@ public class KMswipe extends CordovaPlugin {
 
                     }
 
-                }else if(checkCardProcessResults == CheckCardProcessResults.BAD_SWIPE ||
+                } else if(checkCardProcessResults == CheckCardProcessResults.BAD_SWIPE ||
                         checkCardProcessResults == CheckCardProcessResults.USE_ICC_CARD ||
                         checkCardProcessResults == CheckCardProcessResults.NOT_ICC ||
                         checkCardProcessResults == CheckCardProcessResults.NO_CARD) {
@@ -182,7 +187,6 @@ public class KMswipe extends CordovaPlugin {
                         checkCardProcessResults == CheckCardProcessResults.PIN_WRONG_PIN_LENGTH) {
                     disconnect();
                 }
-
             }
 
             @Override
@@ -250,33 +254,44 @@ public class KMswipe extends CordovaPlugin {
                     rootCallbackContext.error(msDataStore.getResponseFailureReason());
                 }
 
-                if(msDataStore instanceof VoidTransactionResponseData) {
+                if(msDataStore instanceof TransactionDetailsResponseData) {
+
+                    TransactionDetailsResponseData transactionDetailsResponseData = (TransactionDetailsResponseData) msDataStore;
+                    Log.d("KKK_LOG", transactionDetailsResponseData.getResponseStatus().toString());
+                    if(transactionDetailsResponseData.getResponseStatus()) {
+                        proceedVoidTransaction(transactionDetailsResponseData);
+                    } else {
+                        rootCallbackContext.error(transactionDetailsResponseData.getResponseFailureReason());
+                    }
+                } else if(msDataStore instanceof VoidTransactionResponseData) {
                     VoidTransactionResponseData voidTransactionResponseData = (VoidTransactionResponseData) msDataStore;
+                    Log.d("KKK_LOG", voidTransactionResponseData.getResponseStatus().toString());
                     if(voidTransactionResponseData.getResponseStatus()) {
                         try {
                             JSONObject resObj = new JSONObject();
-                            JSONObject trxData = new JSONObject()
-                                    .put("info",voidTransactionResponseData.getReceiptData().toString());
-
-                            resObj.put("type", RES_TYPE_PAYMENT_APPROVED);
+                            resObj.put("type", RES_TYPE_PAYMENT_VOID_APPROVED);
                             resObj.put("message", voidTransactionResponseData.getResponseSuccessMessage());
-                            resObj.put("transactionInfo", trxData);
 
                             rootCallbackContext.success(resObj);
-                            disconnect();
                         }catch (JSONException e) {
-                            Log.v("K_ERROR", e.toString());
+                            rootCallbackContext.error(e.getMessage());
                         }
-                    }else {
-                        rootCallbackContext.error(voidTransactionResponseData.getResponseFailureReason());
+                    } else {
+                        try {
+                            JSONObject resObj = new JSONObject();
+                            resObj.put("type", RES_TYPE_PAYMENT_VOID_ERROR);
+                            resObj.put("message", voidTransactionResponseData.getResponseSuccessMessage());
+                            rootCallbackContext.success(resObj);
+                        } catch (JSONException e) {
+                            rootCallbackContext.error(e.getMessage());
+                        }
                     }
-
 
                 } else if(msDataStore instanceof LoginResponseData) {
                     LoginResponseData loginResponseData = (LoginResponseData) msDataStore;
                     marchentData = loginResponseData;
                     sendAuthCallback(loginResponseData);
-                }else if (msDataStore instanceof CardSaleResponseData) {
+                } else if (msDataStore instanceof CardSaleResponseData) {
 
                     CardSaleResponseData cardSaleResponseData = (CardSaleResponseData) msDataStore;
 
@@ -340,7 +355,7 @@ public class KMswipe extends CordovaPlugin {
                             Log.v("K_ERROR", e.toString());
                         }
 
-                    }else {
+                    } else {
                         disconnect();
                         rootCallbackContext.error(cardSaleResponseData.getResponseFailureReason());
                     }
@@ -472,9 +487,6 @@ public class KMswipe extends CordovaPlugin {
                 networkSource = MSWisepadController.NETWORK_SOURCE.SIM;
             }
 
-            Log.v("KKKKK", gatewayEnvironment.toString());
-            Log.v("KKKKK", networkSource.toString());
-
             msWisepadController = MSWisepadController.getSharedMSWisepadController(context, gatewayEnvironment, networkSource, msGatewayConnectionListener);
             callbackContext.success("OK");
             rootCallbackContext = null;
@@ -542,16 +554,15 @@ public class KMswipe extends CordovaPlugin {
     private void  voidTransaction(JSONObject msgObject, CallbackContext callbackContext) throws JSONException  {
         if(msWisepadController != null) {
             try {
-                msWisepadController.processVoidTransaction(
-                        msgObject.getString("merchantId"),
+                voidTrxDate = msgObject.getString("date");
+                msWisepadController.getCardSaleTrxDetails(
+                        marchentData.getReferenceId(),
                         marchentData.getSessionTokeniser(),
-                        msgObject.getString("date"),
+                        voidTrxDate,
                         msgObject.getString("amount"),
                         msgObject.getString("cardLast4Digits"),
-                        msgObject.getString("stanId"),
-                        msgObject.getString("voucherNo"),
-                        msgObject.getString("clientId"),
-                        msWisepadControllerResponseListener);
+                        msWisepadControllerResponseListener
+                );
             }catch (JSONException e) {
                 callbackContext.error(e.toString());
             }
@@ -559,6 +570,18 @@ public class KMswipe extends CordovaPlugin {
         }else {
             callbackContext.error("Merchant information not available");
         }
+    }
+
+    private void proceedVoidTransaction(TransactionDetailsResponseData data) {
+        msWisepadController.processVoidTransaction(
+                marchentData.getReferenceId(),
+                marchentData.getSessionTokeniser(),
+                voidTrxDate,
+                data.getTrxAmount(),
+                data.getCardLastFourDigits(),
+                data.getStanNo(),
+                data.getVoucherNo(),
+                msWisepadControllerResponseListener);
     }
 
     private void disconnect(String type, CallbackContext callbackContext) {
@@ -580,12 +603,15 @@ public class KMswipe extends CordovaPlugin {
     private void disconnect() {
         try {
             if(msWisepadDeviceController != null) {
-                msWisepadDeviceController.disconnect();
                 context.unbindService(msWisepadDeviceControllerService);
+                msWisepadDeviceController.disconnect();
                 msWisepadDeviceController = null;
+                IsMSWisepasConnectionServiceBound = false;
             }else {
                 msWisepadDeviceController = null;
             }
-        }catch (Exception e) { }
+        }catch (Exception e) {
+            Log.v("DEBUG", e.getMessage());
+        }
     }
 }

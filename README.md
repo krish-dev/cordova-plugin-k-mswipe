@@ -24,6 +24,7 @@ The plugin creates the object `KMswipe` into DOM.
 - [KMswipe.config](#config)
 - [KMswipe.verifyMarchent](#verifyMarchent)
 - [KMswipe.pay](#pay)
+- [KMswipe.voidTransaction](#voidTransaction)
 - [KMswipe.disconnect](#disconnect)
 
 
@@ -79,6 +80,22 @@ This method is reponsible to initiat a transaction via Wisepad device.
 ```
 pay(
     paymentInfo: PaymentInfo,
+    callbackSuccess: (res: any) => void,
+    callbackError: (err: any) => void
+    ): void;
+```
+
+## voidTransaction
+
+### Description
+
+This method is reponsible to initiat a refund request.
+
+### Types
+
+```
+voidTransaction(
+    voidTransactionInfo: VoidTransactionInfo,
     callbackSuccess: (res: any) => void,
     callbackError: (err: any) => void
     ): void;

@@ -61,13 +61,9 @@ export interface PaymentInfo {
  * @interface VoidTransactionInfo
  */
 export interface VoidTransactionInfo {
-    merchantId: string;
     amount: string;
     date: string;
     cardLast4Digits: string;
-    stanId: string;
-    voucherNo: string;
-    clientId: string;
 }
 
 export interface TransactionInfo {

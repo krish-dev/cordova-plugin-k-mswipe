@@ -3,7 +3,8 @@ export {
 	MswipeConfig,
 	MarchentCredential,
 	PaymentInfo,
-	TransactionInfo
+	TransactionInfo,
+	VoidTransactionInfo
 } from './interfaces';
 
 export {
