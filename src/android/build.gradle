@@ -1,4 +1,4 @@
 repositories { flatDir { dirs 'libs' } }
 dependencies {
-    compile(name: 'MswipeWseriesUniversalDRDSDKVer1.0.7v3.4.1', ext: 'aar')
+    compile(name: 'MswipeWseriesUniversalDRDSDKVer1.0.10v3.4.2', ext: 'aar')
 }

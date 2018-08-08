@@ -3,7 +3,7 @@
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cordova-plugin-k-mswipe"
-    version="0.0.5">
+    version="0.0.6">
     <name>KMswipe</name>
     <description>Cordova Mswipe Plugin</description>
     <license>Apache 2.0</license>
@@ -31,7 +31,7 @@
             <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
         </config-file>
 
-        <lib-file src="src/android/lib/MswipeWseriesUniversalDRDSDKVer1.0.7v3.4.1.aar"/>
+        <lib-file src="src/android/lib/MswipeWseriesUniversalDRDSDKVer1.0.10v3.4.2.aar"/>
         <framework src="src/android/build.gradle" custom="true" type="gradleReference"/>
         <framework src="com.android.support:support-v4:26.+"/>
         <source-file src="src/android/KMswipe.java" target-dir="src/in/co/indusnet/cordova/plugins/mswipe"/>
